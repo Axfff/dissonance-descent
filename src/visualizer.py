@@ -70,8 +70,8 @@ def plot_harmonicity_map(slices, fixed_ratios, standard_amplitudes, optimized_am
         dissonance_opt.append(d_opt)
         
     plt.figure(figsize=(14, 6))
-    plt.plot(times, dissonance_std, label='Standard Timbre (Harmonic)', alpha=0.7)
-    plt.plot(times, dissonance_opt, label='Optimized Timbre', alpha=0.9, linewidth=2)
+    plt.plot(times, dissonance_std, label='Standard Timbre (Harmonic)', alpha=0.6, linewidth=1)
+    plt.plot(times, dissonance_opt, label='Optimized Timbre', alpha=0.6, linewidth=1)
     
     plt.xlabel('Time (s)')
     plt.ylabel('Perceptual Roughness')
