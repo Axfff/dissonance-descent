@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adaptive Harmony Engine - Instrument Creator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Instrument Creator</h1>
+            <p>Design your timbre and explore its harmonic landscape.</p>
+        </header>
+
+        <main>
+            <section class="panel timbre-editor">
+                <h2>Timbre Design</h2>
+                <div class="partials-container" id="partials-list">
+                    <!-- Partials will be injected here by JS -->
+                </div>
+                <button id="add-partial-btn" class="btn secondary">+ Add Partial</button>
+                <div class="controls">
+                    <button id="update-btn" class="btn primary">Update & Visualize</button>
+                </div>
+            </section>
+
+            <section class="panel visualization">
+                <h2>Dissonance Landscape</h2>
+                <div class="canvas-container">
+                    <canvas id="dissonance-chart"></canvas>
+                </div>
+                <div class="info-box">
+                    <p><strong>X-Axis:</strong> Frequency Ratio (Interval)</p>
+                    <p><strong>Y-Axis:</strong> Perceptual Roughness (Dissonance)</p>
+                </div>
+            </section>
+
+            <section class="panel player">
+                <h2>Test Instrument</h2>
+                <div class="keyboard">
+                    <button class="key" data-freq="440">A4 (440Hz)</button>
+                    <button class="key" data-freq="550">C#5 (550Hz)</button>
+                    <button class="key" data-freq="660">E5 (660Hz)</button>
+                    <button class="key" data-freq="880">A5 (880Hz)</button>
+                </div>
+                <div class="custom-play">
+                    <input type="number" id="custom-freq" value="440" step="1">
+                    <button id="play-custom-btn" class="btn">Play Custom Freq</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+{
+    "plomp_levelt": {
+        "_comment": "Parameters for the Sethares dissonance curve approximation.",
+        "_comment_s": "s1 and s2 define the Critical Bandwidth (ear's frequency resolution). s1 is the slope (0.021), s2 is the offset (19.0).",
+        "_comment_ab": "a (3.5) controls the fall-off rate of dissonance. b (5.75) controls the rise rate of dissonance.",
+        "a": 0.5,
+        "b": 14,
+        "s1": 0.021,
+        "s2": 19.0
+    },
+    "timbre": {
+        "base_freq": 440.0,
+        "brightness_decay": 1.5,
+        "_comment_brightness": "Brightness decay multiplier: >1.0 makes higher partials fade faster. 1.0 = no difference, 2.0 = aggressive decay for high partials.",
+        "phase_mode": "zero",
+        "_comment_phase": "Phase mode: 'zero' (all start at 0), 'random' (random phases), 'alternating' (0, pi, 0, pi, ...)",
+        "partials": [
+            {
+                "ratio": 1.0,
+                "amplitude": 1.0,
+                "envelope": {
+                    "attack": 0.02,
+                    "decay": 0.1,
+                    "sustain": 0.8,
+                    "release": 0.3
+                }
+            },
+            {
+                "ratio": 2.0,
+                "amplitude": 0.7,
+                "envelope": {
+                    "attack": 0.015,
+                    "decay": 0.08,
+                    "sustain": 0.75,
+                    "release": 0.25
+                }
+            },
+            {
+                "ratio": 3.0,
+                "amplitude": 0.5,
+                "envelope": {
+                    "attack": 0.01,
+                    "decay": 0.07,
+                    "sustain": 0.7,
+                    "release": 0.2
+                }
+            },
+            {
+                "ratio": 4.0,
+                "amplitude": 0.35,
+                "envelope": {
+                    "attack": 0.008,
+                    "decay": 0.06,
+                    "sustain": 0.6,
+                    "release": 0.15
+                }
+            },
+            {
+                "ratio": 5.0,
+                "amplitude": 0.2,
+                "envelope": {
+                    "attack": 0.006,
+                    "decay": 0.05,
+                    "sustain": 0.5,
+                    "release": 0.12
+                }
+            },
+            {
+                "ratio": 6.0,
+                "amplitude": 0.16,
+                "envelope": {
+                    "attack": 0.005,
+                    "decay": 0.04,
+                    "sustain": 0.4,
+                    "release": 0.1
+                }
+            },
+            {
+                "ratio": 7.0,
+                "amplitude": 0.12,
+                "envelope": {
+                    "attack": 0.004,
+                    "decay": 0.03,
+                    "sustain": 0.35,
+                    "release": 0.08
+                }
+            },
+            {
+                "ratio": 8.0,
+                "amplitude": 0.08,
+                "envelope": {
+                    "attack": 0.003,
+                    "decay": 0.025,
+                    "sustain": 0.3,
+                    "release": 0.06
+                }
+            },
+            {
+                "ratio": 9.0,
+                "amplitude": 0.06,
+                "envelope": {
+                    "attack": 0.002,
+                    "decay": 0.02,
+                    "sustain": 0.25,
+                    "release": 0.05
+                }
+            }
+        ]
+    },
+    "visualization": {
+        "range_ratio": 2.2,
+        "resolution": 500
+    }
+}
