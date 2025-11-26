@@ -168,7 +168,8 @@ def calculate_song_dissonance_with_envelopes(timbre_params, slices, fixed_ratios
         
     return total_song_dissonance
 
-def calculate_song_dissonance_enhanced(partials, slices, model_params=None):
+
+def calculate_song_dissonance_enhanced(partials, slices, model_params=None, use_fast=True):
     """
     Calculates the global dissonance for enhanced optimization with structured partials.
     
@@ -176,10 +177,21 @@ def calculate_song_dissonance_enhanced(partials, slices, model_params=None):
         partials (list): List of partial dicts with 'ratio', 'amplitude', 'envelope'
         slices (list): List of tuples (duration, [(freq1, amp1), ...]) from parse_midi_to_slices.
         model_params (dict): Plomp-Levelt parameters.
+        use_fast (bool): Use fast vectorized/Numba backend (default: True)
         
     Returns:
         float: The total integrated dissonance over time.
     """
+    # Import fast backend if requested
+    if use_fast:
+        try:
+            from src.dissonance_fast import calculate_total_dissonance_fast
+            calc_func = lambda f, a, p: calculate_total_dissonance_fast(f, a, p, backend='auto')
+        except ImportError:
+            calc_func = calculate_total_dissonance
+    else:
+        calc_func = calculate_total_dissonance
+    
     total_song_dissonance = 0.0
     
     # Filter out near-zero amplitude partials for efficiency
@@ -216,8 +228,8 @@ def calculate_song_dissonance_enhanced(partials, slices, model_params=None):
                 slice_freqs.append(freq)
                 slice_amps.append(effective_amp)
         
-        # Calculate dissonance for this slice
-        d = calculate_total_dissonance(slice_freqs, slice_amps, model_params)
+        # Calculate dissonance for this slice using fast backend
+        d = calc_func(slice_freqs, slice_amps, model_params)
         
         # Integrate over time
         total_song_dissonance += d * duration

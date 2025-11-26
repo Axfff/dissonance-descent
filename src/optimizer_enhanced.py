@@ -468,14 +468,20 @@ def optimize_timbre_enhanced(slices, config, model_params=None):
             callback.create_checkpoint(xk, metadata, decode_parameters, iteration_label)
     
     
+    
     # Run optimization
     print("\n--- Starting Enhanced Optimization ---")
+    
+    # For large parameter spaces, L-BFGS-B is more efficient than SLSQP
+    optimizer_method = 'L-BFGS-B' if len(initial_params) > 100 else 'SLSQP'
+    print(f"Using optimizer: {optimizer_method}")
+    
     result = minimize(
         cost_function_with_tracking,
         initial_params,
-        method='SLSQP',
+        method=optimizer_method,
         bounds=bounds,
-        constraints=constraints,
+        constraints=constraints if optimizer_method == 'SLSQP' else (),  # L-BFGS-B doesn't support eq constraints
         callback=combined_callback,
         options={'disp': True, 'maxiter': 200, 'ftol': 1e-6}
     )
