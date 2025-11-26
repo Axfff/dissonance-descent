@@ -168,3 +168,59 @@ def calculate_song_dissonance_with_envelopes(timbre_params, slices, fixed_ratios
         
     return total_song_dissonance
 
+def calculate_song_dissonance_enhanced(partials, slices, model_params=None):
+    """
+    Calculates the global dissonance for enhanced optimization with structured partials.
+    
+    Args:
+        partials (list): List of partial dicts with 'ratio', 'amplitude', 'envelope'
+        slices (list): List of tuples (duration, [(freq1, amp1), ...]) from parse_midi_to_slices.
+        model_params (dict): Plomp-Levelt parameters.
+        
+    Returns:
+        float: The total integrated dissonance over time.
+    """
+    total_song_dissonance = 0.0
+    
+    # Filter out near-zero amplitude partials for efficiency
+    active_partials = [p for p in partials if p['amplitude'] > 0.001]
+    
+    if len(active_partials) == 0:
+        return 1e10  # Penalty for silent solution
+    
+    for duration, fundamentals in slices:
+        if not fundamentals:
+            continue
+            
+        # For this slice, calculate all active partials
+        slice_freqs = []
+        slice_amps = []
+        
+        for f0, amp0 in fundamentals:
+            for partial in active_partials:
+                ratio = partial['ratio']
+                amplitude = partial['amplitude']
+                envelope = partial.get('envelope')
+                
+                freq = f0 * ratio
+                
+                # Calculate effective amplitude
+                if envelope is not None:
+                    # Use time-averaged envelope amplitude
+                    avg_factor = calculate_envelope_average(envelope, duration)
+                    effective_amp = amplitude * amp0 * avg_factor
+                else:
+                    # Simple steady-state amplitude
+                    effective_amp = amplitude * amp0
+                
+                slice_freqs.append(freq)
+                slice_amps.append(effective_amp)
+        
+        # Calculate dissonance for this slice
+        d = calculate_total_dissonance(slice_freqs, slice_amps, model_params)
+        
+        # Integrate over time
+        total_song_dissonance += d * duration
+        
+    return total_song_dissonance
+

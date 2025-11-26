@@ -5,6 +5,7 @@ import numpy as np
 import soundfile as sf
 from src.midi_parser import parse_midi_to_slices, parse_midi_to_notes
 from src.optimizer import optimize_timbre
+from src.optimizer_enhanced import optimize_timbre_enhanced
 from src.visualizer import plot_harmonicity_map
 from src.synthesizer import generate_tone
 from visualize_landscape import plot_landscape_comparison
@@ -281,19 +282,109 @@ def main():
     # 4. Optimization
     print("\n--- Starting Optimization ---")
     
-    result = optimize_timbre(slices, fixed_ratios, initial_amplitudes)
-    optimized_amplitudes = result.x
+    optimization_mode = config.get('optimization', {}).get('mode', 'classic')
+    print(f"Optimization mode: {optimization_mode}")
     
-    print("\n--- Results ---")
-    np.set_printoptions(precision=4, suppress=True)
-    print(f"Fixed Ratios: {fixed_ratios}")
-    print(f"Standard Amplitudes: {np.array(initial_amplitudes)}")
-    print(f"Optimized Amplitudes: {optimized_amplitudes}")
+    
+    if optimization_mode == 'enhanced':
+        # Enhanced optimization with ADSR and/or dense grid
+        result = optimize_timbre_enhanced(slices, config)
+        optimized_partials = result['active_partials']
+        
+        # Extract data for visualization and rendering
+        optimized_ratios = [p['ratio'] for p in optimized_partials]
+        optimized_amplitudes = [p['amplitude'] for p in optimized_partials]
+        optimized_envelopes = [p['envelope'] for p in optimized_partials]
+        
+        print(f"\n--- Enhanced Optimization Results ---")
+        print(f"Active partials: {len(optimized_partials)}")
+        print(f"Optimized ratios: {optimized_ratios}")
+        print(f"Optimized amplitudes: {optimized_amplitudes}")
+        
+    else:
+        # Classic optimization (amplitude only)
+        result = optimize_timbre(slices, fixed_ratios, initial_amplitudes)
+        optimized_amplitudes = result.x
+        optimized_ratios = fixed_ratios  # Ratios don't change in classic mode
+        optimized_envelopes = envelope_params  # Envelopes don't change in classic mode
+        
+        print("\n--- Results ---")
+        np.set_printoptions(precision=4, suppress=True)
+        print(f"Fixed Ratios: {fixed_ratios}")
+        print(f"Standard Amplitudes: {np.array(initial_amplitudes)}")
+        print(f"Optimized Amplitudes: {optimized_amplitudes}")
     
     # 5. Visualization
     print("\nGenerating Visualization...")
-    plot_harmonicity_map(slices, fixed_ratios, initial_amplitudes, optimized_amplitudes, 'harmonicity_map.png')
-    plot_landscape_comparison(fixed_ratios, initial_amplitudes, optimized_amplitudes, 'dissonance_landscape.png')
+    
+    # For classic mode visualization
+    if optimization_mode == 'classic':
+        plot_harmonicity_map(slices, fixed_ratios, initial_amplitudes, optimized_amplitudes, 'harmonicity_map.png')
+        plot_landscape_comparison(fixed_ratios, initial_amplitudes, optimized_amplitudes, 'dissonance_landscape.png')
+    else:
+        # For enhanced mode - generate all visualizations
+        from src.visualizer_enhanced import plot_frequency_migration, plot_adsr_comparison
+        
+        # 1. Frequency migration plot (enhanced-specific)
+        plot_frequency_migration(
+            config['timbre']['partials'],
+            optimized_partials,
+            'frequency_migration.png'
+        )
+        
+        # 2. ADSR comparison (if enabled)
+        if config['optimization']['optimize_adsr']['enabled']:
+            plot_adsr_comparison(
+                config['timbre']['partials'],
+                optimized_partials,
+                'adsr_comparison.png'
+            )
+        
+        # 3. Harmonicity map - shows dissonance over time
+        # Need to convert partials to fixed format for visualization
+        # Extract all amplitudes (including fundamental at index 0)
+        initial_config_amps = [p['amplitude'] for p in config['timbre']['partials']]
+        
+        # For optimized partials, we only have active ones
+        # Extract their ratios and amplitudes (including fundamental)
+        optimized_active_ratios = [p['ratio'] for p in optimized_partials]
+        optimized_active_amps = [p['amplitude'] for p in optimized_partials]
+        
+        # For comparison, we need to match frequencies
+        # Create initial amps array matching optimized ratios
+        initial_amps_matched = []
+        config_ratios = [p['ratio'] for p in config['timbre']['partials']]
+        
+        for opt_ratio in optimized_active_ratios:
+            # Find matching ratio in config (or closest)
+            if opt_ratio in config_ratios:
+                idx = config_ratios.index(opt_ratio)
+                initial_amps_matched.append(initial_config_amps[idx])
+            else:
+                # Use average if no exact match
+                initial_amps_matched.append(0.5)
+        
+        # Now we can plot with matched arrays
+        # For harmonicity map, we need ratios excluding fundamental
+        plot_harmonicity_map(
+            slices, 
+            optimized_active_ratios[1:],  # Exclude fundamental
+            initial_amps_matched[1:],      # Exclude fundamental
+            optimized_active_amps[1:],     # Exclude fundamental
+            'harmonicity_map.png'
+        )
+        
+        # 4. Dissonance landscape comparison
+        # For dense grid, only plot active partials to keep it readable
+        if len(optimized_active_ratios) <= 20:  # Only plot if not too many
+            plot_landscape_comparison(
+                optimized_active_ratios[1:],   # Exclude fundamental
+                initial_amps_matched[1:],       # Exclude fundamental
+                optimized_active_amps[1:],      # Exclude fundamental
+                'dissonance_landscape.png'
+            )
+        else:
+            print(f"  Skipping landscape plot (too many active partials: {len(optimized_active_ratios)})")
     
     # 6. Rendering with Enhanced Timbre
     print("\nRendering Audio with Enhanced Timbre...")
@@ -302,7 +393,7 @@ def main():
     notes = parse_midi_to_notes(midi_file)
     print(f"Parsed {len(notes)} notes for rendering.")
     
-    # Render with envelope parameters
+    # Render standard timbre
     render_audio_from_notes(
         notes, fixed_ratios, initial_amplitudes, 
         'output_standard.wav',
@@ -311,10 +402,11 @@ def main():
         phase_mode=phase_mode
     )
     
+    # Render optimized timbre
     render_audio_from_notes(
-        notes, fixed_ratios, optimized_amplitudes, 
+        notes, optimized_ratios, optimized_amplitudes, 
         'output_optimized.wav',
-        envelope_params=envelope_params,
+        envelope_params=optimized_envelopes,
         brightness_decay=brightness_decay,
         phase_mode=phase_mode
     )
