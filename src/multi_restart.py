@@ -132,7 +132,13 @@ def optimize_timbre_multi_restart(slices, config, model_params=None, n_restarts=
     
     # Save multi-restart summary
     if best_result:
-        summary_file = config['optimization'].get('progress_dir', 'experiments') + '/multi_restart_summary.json'
+        base_dir = config['optimization'].get('progress_dir', 'experiments/optimization_progress')
+        summary_file = base_dir + '/multi_restart_summary.json'
+        
+        # Ensure directory exists
+        import os
+        os.makedirs(os.path.dirname(summary_file), exist_ok=True)
+        
         with open(summary_file, 'w') as f:
             # Prepare summary (exclude large objects)
             summary = {
@@ -140,10 +146,10 @@ def optimize_timbre_multi_restart(slices, config, model_params=None, n_restarts=
                 'timestamp': datetime.now().isoformat(),
                 'results': [
                     {
-                        'restart_idx': r['restart_idx'],
+                        'restart_idx': int(r['restart_idx']),
                         'strategy': r['strategy'],
-                        'cost': r['cost'],
-                        'success': r['success']
+                        'cost': float(r['cost']) if r['cost'] is not None else None,
+                        'success': bool(r['success'])
                     }
                     for r in results
                 ],
