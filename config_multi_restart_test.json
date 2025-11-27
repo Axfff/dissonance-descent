@@ -1,19 +1,14 @@
 {
     "plomp_levelt": {
-        "_comment": "Parameters for the Sethares dissonance curve approximation.",
-        "_comment_s": "s1 and s2 define the Critical Bandwidth (ear's frequency resolution). s1 is the slope (0.021), s2 is the offset (19.0).",
-        "_comment_ab": "a (3.5) controls the fall-off rate of dissonance. b (5.75) controls the rise rate of dissonance.",
-        "a": 0.5,
-        "b": 14,
+        "a": 3.5,
+        "b": 5.75,
         "s1": 0.021,
         "s2": 19.0
     },
     "timbre": {
-        "base_freq": 440.0,
+        "base_freq": 261.63,
         "brightness_decay": 1.5,
-        "_comment_brightness": "Brightness decay multiplier: >1.0 makes higher partials fade faster. 1.0 = no difference, 2.0 = aggressive decay for high partials.",
         "phase_mode": "zero",
-        "_comment_phase": "Phase mode: 'zero' (all start at 0), 'random' (random phases), 'alternating' (0, pi, 0, pi, ...)",
         "partials": [
             {
                 "ratio": 1.0,
@@ -27,31 +22,31 @@
             },
             {
                 "ratio": 2.0,
-                "amplitude": 0.7,
+                "amplitude": 0.6,
                 "envelope": {
-                    "attack": 0.015,
+                    "attack": 0.01,
                     "decay": 0.08,
-                    "sustain": 0.75,
+                    "sustain": 0.7,
                     "release": 0.25
                 }
             },
             {
                 "ratio": 3.0,
-                "amplitude": 0.5,
+                "amplitude": 0.4,
                 "envelope": {
-                    "attack": 0.01,
-                    "decay": 0.07,
-                    "sustain": 0.7,
+                    "attack": 0.005,
+                    "decay": 0.06,
+                    "sustain": 0.6,
                     "release": 0.2
                 }
             },
             {
                 "ratio": 4.0,
-                "amplitude": 0.35,
+                "amplitude": 0.25,
                 "envelope": {
-                    "attack": 0.008,
-                    "decay": 0.06,
-                    "sustain": 0.6,
+                    "attack": 0.003,
+                    "decay": 0.05,
+                    "sustain": 0.5,
                     "release": 0.15
                 }
             }
@@ -62,14 +57,14 @@
         "_comment_mode": "'classic' (amplitude only), 'enhanced' (amplitude + ADSR + dense grid)",
         "frequency_grid": {
             "enabled": true,
-            "min_ratio": 0.5,
-            "max_ratio": 10.0,
-            "step": 0.1,
-            "_comment": "Smaller test grid: [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0] = 9 frequencies"
+            "min_ratio": 1.0,
+            "max_ratio": 5.0,
+            "step": 0.5,
+            "_comment": "Small test grid for quick testing"
         },
         "optimize_adsr": {
-            "enabled": true,
-            "_comment_test": "Disabled for faster testing - only optimize amplitude first",
+            "enabled": false,
+            "_comment": "Disabled for faster testing",
             "attack_bounds": [
                 0.001,
                 0.1
@@ -93,12 +88,12 @@
             "sparsity_penalty": 0.0,
             "_comment_sparsity": "Penalty for using many frequencies (encourages sparse solutions). 0.0 = no penalty"
         },
-        "checkpoint_interval": 10,
-        "_comment_checkpoint": "Save detailed checkpoint every N iterations",
-        "progress_dir": "experiments/optimization_progress",
+        "checkpoint_interval": 5,
+        "_comment_checkpoint": "Save detailed checkpoint every N iterations (smaller for testing)",
+        "progress_dir": "experiments/test_multi_restart",
         "_comment_progress": "Directory to save optimization progress",
         "multi_restart": {
-            "enabled": false,
+            "enabled": true,
             "n_restarts": 3,
             "_comment_n": "Number of optimization runs with different random seeds",
             "strategies": [

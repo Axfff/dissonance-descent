@@ -287,8 +287,30 @@ def main():
     
     
     if optimization_mode == 'enhanced':
-        # Enhanced optimization with ADSR and/or dense grid
-        result = optimize_timbre_enhanced(slices, config)
+        # Check if multi-restart is enabled
+        multi_restart_config = config.get('optimization', {}).get('multi_restart', {})
+        use_multi_restart = multi_restart_config.get('enabled', False)
+        
+        if use_multi_restart:
+            # Multi-restart optimization (Strategy B)
+            from src.multi_restart import optimize_timbre_multi_restart
+            
+            n_restarts = multi_restart_config.get('n_restarts', 3)
+            strategies = multi_restart_config.get('strategies', None)
+            
+            print(f"\n🎲 Multi-restart optimization enabled: {n_restarts} runs")
+            
+            result = optimize_timbre_multi_restart(
+                slices, 
+                config, 
+                n_restarts=n_restarts,
+                strategies=strategies,
+                verbose=True
+            )
+        else:
+            # Single optimization run
+            result = optimize_timbre_enhanced(slices, config)
+        
         optimized_partials = result['active_partials']
         
         # Extract data for visualization and rendering

@@ -363,12 +363,33 @@ def optimize_timbre_enhanced(slices, config, model_params=None):
     optimize_adsr = opt_config['optimize_adsr']['enabled']
     print(f"ADSR optimization: {optimize_adsr}")
     
-    # Create initial partials
-    initial_partials = create_initial_partials(
-        timbre_config['partials'],
-        frequency_grid,
-        optimize_adsr
-    )
+    # Check if randomization is requested
+    randomization_config = config.get('_randomization', None)
+    if randomization_config:
+        # Multi-restart mode: use randomized initialization
+        from src.randomization import create_random_initial_partials
+        
+        strategy = randomization_config.get('strategy', 'perturb')
+        amp_pert = randomization_config.get('amp_perturbation', 0.2)
+        adsr_pert = randomization_config.get('adsr_perturbation', 0.2)
+        
+        print(f"Randomization: {strategy} (amp±{amp_pert*100:.0f}%, adsr±{adsr_pert*100:.0f}%)")
+        
+        initial_partials = create_random_initial_partials(
+            timbre_config['partials'],
+            frequency_grid,
+            optimize_adsr,
+            amp_perturbation=amp_pert,
+            adsr_perturbation=adsr_pert,
+            strategy=strategy
+        )
+    else:
+        # Standard mode: use config-based initialization
+        initial_partials = create_initial_partials(
+            timbre_config['partials'],
+            frequency_grid,
+            optimize_adsr
+        )
     
     # Encode parameters
     initial_params, metadata = encode_parameters(initial_partials, optimize_adsr)
