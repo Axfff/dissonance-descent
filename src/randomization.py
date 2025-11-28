@@ -4,25 +4,38 @@ Implements constraint-aware random parameter generation.
 """
 import numpy as np
 
-def randomize_amplitudes(base_amplitudes, perturbation=0.1, preserve_energy=True):
+def randomize_amplitudes(base_amplitudes, perturbation=0.1, preserve_energy=True, 
+                         zero_threshold=0.001):
     """
     Randomize amplitudes with optional energy conservation.
+    Handles zero/near-zero amplitudes properly using additive noise.
     
     Args:
         base_amplitudes: Base amplitude values
         perturbation: Relative perturbation amount (0.1 = ±10%)
         preserve_energy: Maintain total amplitude sum
+        zero_threshold: Threshold below which to use additive noise
         
     Returns:
         Randomized amplitudes
     """
-    amplitudes = np.array(base_amplitudes)
+    amplitudes = np.array(base_amplitudes, dtype=float)
     
-    # Add random perturbation
-    noise = np.random.uniform(-perturbation, perturbation, len(amplitudes))
-    randomized = amplitudes * (1 + noise)
+    # For each amplitude, decide between multiplicative and additive noise
+    randomized = np.zeros_like(amplitudes)
     
-    # Clip to valid range
+    for i, amp in enumerate(amplitudes):
+        if amp < zero_threshold:
+            # Use additive noise for zero/near-zero values
+            # This allows dormant frequencies to "wake up"
+            # Random value in [0, perturbation]
+            randomized[i] = np.random.uniform(0, perturbation)
+        else:
+            # Use multiplicative noise for non-zero values
+            noise = np.random.uniform(-perturbation, perturbation)
+            randomized[i] = amp * (1 + noise)
+    
+    # Clip to valid range [0, 1]
     randomized = np.clip(randomized, 0.0, 1.0)
     
     # Preserve energy if requested
@@ -141,18 +154,21 @@ def _smart_random_partials(config_partials, frequency_grid, optimize_adsr,
     
     # Generate random but normalized amplitudes
     n = len(ratios)
-    random_amps = np.random.uniform(0.0, 1.0, n)
+    
+    # Start with uniform random distribution
+    random_amps = np.random.uniform(0.1, 1.0, n)  # Min 0.1 to ensure diversity
     
     # Normalize to preserve total energy
     if np.sum(random_amps) > 0:
         random_amps = random_amps * (total_energy / np.sum(random_amps))
     
-    # Prefer lower frequencies (musical prior)
-    # Apply decay based on frequency rank
-    decay_factor = np.exp(-np.arange(n) * 0.1)
+    # Apply frequency-based decay (musical prior: prefer lower frequencies)
+    # But don't zero out higher frequencies completely
+    decay_factor = np.exp(-np.arange(n) * 0.05)  # Gentler decay (was 0.1)
+    decay_factor = np.clip(decay_factor, 0.1, 1.0)  # Min 10% of original
     random_amps = random_amps * decay_factor
     
-    # Re-normalize
+    # Re-normalize after decay
     if np.sum(random_amps) > 0:
         random_amps = random_amps * (total_energy / np.sum(random_amps))
     
