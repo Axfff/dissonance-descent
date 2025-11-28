@@ -20,7 +20,6 @@ def generate_trial_outputs(result, restart_idx, slices, config, output_dir):
     """
     # Import required modules from correct locations
     import sys
-    import os
     # Add project root to path to import root-level modules
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     if project_root not in sys.path:
@@ -29,7 +28,7 @@ def generate_trial_outputs(result, restart_idx, slices, config, output_dir):
     from visualize_landscape import plot_landscape_comparison
     from src.visualizer import plot_harmonicity_map  
     from src.visualizer_enhanced import plot_frequency_migration, plot_adsr_comparison
-    from src.synthesizer import render_notes_to_audio
+    from run_experiment import render_audio_from_notes
     from src.midi_parser import parse_midi_to_notes
     
     print(f"\n  Generating outputs for restart {restart_idx}...")
@@ -121,26 +120,40 @@ def generate_trial_outputs(result, restart_idx, slices, config, output_dir):
         midi_file = config.get('midi_file', 'bach_prelude.mid')
         notes = parse_midi_to_notes(midi_file)
         
+        # Extract ratios and amplitudes for rendering (excluding fundamental)
+        standard_ratios = [p['ratio'] for p in config['timbre']['partials']][1:]
+        standard_amps = [p['amplitude'] for p in config['timbre']['partials']][1:]
+        
+        optimized_ratios = [p['ratio'] for p in optimized_partials][1:]
+        optimized_amps = [p['amplitude'] for p in optimized_partials][1:]
+        
+        brightness_decay = config['timbre']['brightness_decay']
+        phase_mode = config['timbre']['phase_mode']
+        
         # Standard timbre audio
         standard_path = os.path.join(output_dir, 'output_standard.wav')
-        render_notes_to_audio(
+        render_audio_from_notes(
             notes,
-            config['timbre']['partials'],
+            standard_ratios,
+            standard_amps,
             standard_path,
-            config['timbre']['brightness_decay'],
-            config['timbre']['phase_mode']
+            None,  # envelope_params
+            brightness_decay,
+            phase_mode
         )
         generated_files['audio_standard'] = standard_path
         print(f"    ✓ Standard audio → {standard_path}")
         
         # Optimized timbre audio
         optimized_path = os.path.join(output_dir, 'output_optimized.wav')
-        render_notes_to_audio(
+        render_audio_from_notes(
             notes,
-            optimized_partials,
+            optimized_ratios,
+            optimized_amps,
             optimized_path,
-            config['timbre']['brightness_decay'],
-            config['timbre']['phase_mode']
+            None,  # envelope_params  
+            brightness_decay,
+            phase_mode
         )
         generated_files['audio_optimized'] = optimized_path
         print(f"    ✓ Optimized audio → {optimized_path}")
