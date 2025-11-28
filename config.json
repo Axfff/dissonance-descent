@@ -98,7 +98,7 @@
         "progress_dir": "experiments/optimization_progress",
         "_comment_progress": "Directory to save optimization progress",
         "multi_restart": {
-            "enabled": true,
+            "enabled": false,
             "n_restarts": 3,
             "_comment_n": "Number of optimization runs with different random seeds",
             "strategies": [
@@ -111,6 +111,12 @@
             "_comment_amp": "Amplitude perturbation amount (0.2 = ±20%)",
             "adsr_perturbation": 0.2,
             "_comment_adsr": "ADSR perturbation amount (0.2 = ±20%)"
+        },
+        "gpu": {
+            "enabled": false,
+            "_comment_enabled": "Enable GPU acceleration (requires PyTorch)",
+            "device": "auto",
+            "_comment_device": "'cuda' (NVIDIA), 'mps' (Mac), 'cpu', or 'auto' (auto-detect)"
         }
     },
     "visualization": {

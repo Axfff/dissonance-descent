@@ -169,7 +169,7 @@ def calculate_song_dissonance_with_envelopes(timbre_params, slices, fixed_ratios
     return total_song_dissonance
 
 
-def calculate_song_dissonance_enhanced(partials, slices, model_params=None, use_fast=True):
+def calculate_song_dissonance_enhanced(partials, slices, model_params=None, use_fast=True, use_gpu=False, device='auto'):
     """
     Calculates the global dissonance for enhanced optimization with structured partials.
     
@@ -178,10 +178,22 @@ def calculate_song_dissonance_enhanced(partials, slices, model_params=None, use_
         slices (list): List of tuples (duration, [(freq1, amp1), ...]) from parse_midi_to_slices.
         model_params (dict): Plomp-Levelt parameters.
         use_fast (bool): Use fast vectorized/Numba backend (default: True)
+        use_gpu (bool): Use GPU acceleration with PyTorch (default: False)
+        device (str): Device for GPU ('cuda', 'mps', 'cpu', or 'auto')
         
     Returns:
         float: The total integrated dissonance over time.
     """
+    # GPU takes priority if requested
+    if use_gpu:
+        try:
+            from src.dissonance_gpu import calculate_song_dissonance_gpu
+            return calculate_song_dissonance_gpu(partials, slices, model_params, device=device)
+        except ImportError as e:
+            print(f"⚠️  GPU backend not available: {e}")
+            print("   Falling back to CPU vectorization")
+            use_gpu = False
+    
     # Import fast backend if requested
     if use_fast:
         try:

@@ -439,6 +439,14 @@ def optimize_timbre_enhanced(slices, config, model_params=None):
     # Extract sparsity penalty
     sparsity_penalty = opt_config['constraints']['sparsity_penalty']
     
+    # Check if GPU is enabled
+    gpu_config = opt_config.get('gpu', {})
+    use_gpu = gpu_config.get('enabled', False)
+    gpu_device = gpu_config.get('device', 'auto')
+    
+    if use_gpu:
+        print(f"🚀 GPU acceleration: enabled (device={gpu_device})")
+    
     # Create optimization callback for progress tracking
     checkpoint_interval = opt_config.get('checkpoint_interval', 10)  
     progress_dir = opt_config.get('progress_dir', 'experiments/optimization_progress')
@@ -459,8 +467,13 @@ def optimize_timbre_enhanced(slices, config, model_params=None):
             for i, partial in enumerate(partials):
                 partial['envelope'] = original_envelopes[i]
         
-        # Calculate dissonance
-        d = calculate_song_dissonance_enhanced(partials, slices, model_params)
+        # Calculate dissonance (with GPU if enabled)
+        d = calculate_song_dissonance_enhanced(
+            partials, slices, model_params,
+            use_fast=True,
+            use_gpu=use_gpu,
+            device=gpu_device
+        )
         
         # Add optional sparsity penalty
         if sparsity_penalty > 0:
