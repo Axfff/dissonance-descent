@@ -2,6 +2,7 @@
 Multi-restart optimization wrapper for global search.
 Runs optimization multiple times with different random initializations.
 """
+import os
 import numpy as np
 import json
 from datetime import datetime
@@ -101,7 +102,9 @@ def optimize_timbre_multi_restart(slices, config, model_params=None, n_restarts=
                     result['_generated_files'] = generated_files
                 except Exception as e:
                     if verbose:
+                        import traceback
                         print(f"  ⚠️  Output generation failed: {e}")
+                        print(f"     Error details: {traceback.format_exc()}")
             
             # Track best result
             if result['success'] and result['cost'] < best_cost:

@@ -18,15 +18,12 @@ def generate_trial_outputs(result, restart_idx, slices, config, output_dir):
     Returns:
         dict: Paths to generated files
     """
-    # Correct imports with proper paths
-    import sys
-    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    
+    # Import required modules
     from visualize_landscape import plot_landscape_comparison
     from visualize_harmonicity import plot_harmonicity_map  
     from src.visualizer_enhanced import plot_frequency_migration, plot_adsr_comparison
-    from render_audio import render_notes_to_audio
-    from parse_midi import parse_midi_to_notes
+    from src.synthesizer import render_notes_to_audio
+    from src.midi_parser import parse_midi_to_notes
     
     print(f"\n  Generating outputs for restart {restart_idx}...")
     
