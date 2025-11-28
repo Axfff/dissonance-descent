@@ -18,6 +18,10 @@ def generate_trial_outputs(result, restart_idx, slices, config, output_dir):
     Returns:
         dict: Paths to generated files
     """
+    # Correct imports with proper paths
+    import sys
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    
     from visualize_landscape import plot_landscape_comparison
     from visualize_harmonicity import plot_harmonicity_map  
     from src.visualizer_enhanced import plot_frequency_migration, plot_adsr_comparison

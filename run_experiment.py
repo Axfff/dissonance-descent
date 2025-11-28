@@ -339,74 +339,100 @@ def main():
     # 5. Visualization
     print("\nGenerating Visualization...")
     
-    # For classic mode visualization
-    if optimization_mode == 'classic':
-        plot_harmonicity_map(slices, fixed_ratios, initial_amplitudes, optimized_amplitudes, 'harmonicity_map.png')
-        plot_landscape_comparison(fixed_ratios, initial_amplitudes, optimized_amplitudes, 'dissonance_landscape.png')
+    # Check if multi-restart is enabled
+    multi_restart_enabled = config.get('optimization', {}).get('multi_restart', {}).get('enabled', False)
+    
+    if multi_restart_enabled:
+        # Multi-restart already generated outputs for each trial
+        print("  ℹ️  Multi-restart mode: visualizations already generated for each trial")
+        print(f"  📁 Check: experiments/optimization_progress_restart*/outputs/")
+        print(f"  🌐 View comparison: experiments/optimization_progress/comparison.html")
+        
+        # Optionally generate summary visualization for best result only
+        if optimization_mode == 'enhanced':
+            print("\n  Generating summary for best trial...")
+            from src.visualizer_enhanced import plot_frequency_migration
+            
+            # Just save convergence comparison across trials  
+            try:
+                plot_frequency_migration(
+                    config['timbre']['partials'],
+                    optimized_partials,
+                    'frequency_migration_best.png'
+                )
+                print(f"    ✓ Best trial frequency migration → frequency_migration_best.png")
+            except Exception as e:
+                print(f"    ⚠️  Summary visualization failed: {e}")
     else:
-        # For enhanced mode - generate all visualizations
-        from src.visualizer_enhanced import plot_frequency_migration, plot_adsr_comparison
-        
-        # 1. Frequency migration plot (enhanced-specific)
-        plot_frequency_migration(
-            config['timbre']['partials'],
-            optimized_partials,
-            'frequency_migration.png'
-        )
-        
-        # 2. ADSR comparison (if enabled)
-        if config['optimization']['optimize_adsr']['enabled']:
-            plot_adsr_comparison(
+        # Single optimization: generate visualizations as before
+        # For classic mode visualization
+        if optimization_mode == 'classic':
+            plot_harmonicity_map(slices, fixed_ratios, initial_amplitudes, optimized_amplitudes, 'harmonicity_map.png')
+            plot_landscape_comparison(fixed_ratios, initial_amplitudes, optimized_amplitudes, 'dissonance_landscape.png')
+        else:
+            # For enhanced mode - generate all visualizations
+            from src.visualizer_enhanced import plot_frequency_migration, plot_adsr_comparison
+            
+            # 1. Frequency migration plot (enhanced-specific)
+            plot_frequency_migration(
                 config['timbre']['partials'],
                 optimized_partials,
-                'adsr_comparison.png'
+                'frequency_migration.png'
             )
-        
-        # 3. Harmonicity map - shows dissonance over time
-        # Need to convert partials to fixed format for visualization
-        # Extract all amplitudes (including fundamental at index 0)
-        initial_config_amps = [p['amplitude'] for p in config['timbre']['partials']]
-        
-        # For optimized partials, we only have active ones
-        # Extract their ratios and amplitudes (including fundamental)
-        optimized_active_ratios = [p['ratio'] for p in optimized_partials]
-        optimized_active_amps = [p['amplitude'] for p in optimized_partials]
-        
-        # For comparison, we need to match frequencies
-        # Create initial amps array matching optimized ratios
-        initial_amps_matched = []
-        config_ratios = [p['ratio'] for p in config['timbre']['partials']]
-        
-        for opt_ratio in optimized_active_ratios:
-            # Find matching ratio in config (or closest)
-            if opt_ratio in config_ratios:
-                idx = config_ratios.index(opt_ratio)
-                initial_amps_matched.append(initial_config_amps[idx])
+            
+            # 2. ADSR comparison (if enabled)
+            if config['optimization']['optimize_adsr']['enabled']:
+                plot_adsr_comparison(
+                    config['timbre']['partials'],
+                    optimized_partials,
+                    'adsr_comparison.png'
+                )
+            
+            # 3. Harmonicity map - shows dissonance over time
+            # Need to convert partials to fixed format for visualization
+            # Extract all amplitudes (including fundamental at index 0)
+            initial_config_amps = [p['amplitude'] for p in config['timbre']['partials']]
+            
+            # For optimized partials, we only have active ones
+            # Extract their ratios and amplitudes (including fundamental)
+            optimized_active_ratios = [p['ratio'] for p in optimized_partials]
+            optimized_active_amps = [p['amplitude'] for p in optimized_partials]
+            
+            # For comparison, we need to match frequencies
+            # Create initial amps array matching optimized ratios
+            initial_amps_matched = []
+            config_ratios = [p['ratio'] for p in config['timbre']['partials']]
+            
+            for opt_ratio in optimized_active_ratios:
+                # Find matching ratio in config (or closest)
+                if opt_ratio in config_ratios:
+                    idx = config_ratios.index(opt_ratio)
+                    initial_amps_matched.append(initial_config_amps[idx])
+                else:
+                    # Use average if no exact match
+                    initial_amps_matched.append(0.5)
+            
+            # Now we can plot with matched arrays
+            # For harmonicity map, we need ratios excluding fundamental
+            plot_harmonicity_map(
+                slices, 
+                optimized_active_ratios[1:],  # Exclude fundamental
+                initial_amps_matched[1:],      # Exclude fundamental
+                optimized_active_amps[1:],     # Exclude fundamental
+                'harmonicity_map.png'
+            )
+            
+            # 4. Dissonance landscape comparison
+            # For dense grid, only plot active partials to keep it readable
+            if len(optimized_active_ratios) <= 20:  # Only plot if not too many
+                plot_landscape_comparison(
+                    optimized_active_ratios[1:],   # Exclude fundamental
+                    initial_amps_matched[1:],       # Exclude fundamental
+                    optimized_active_amps[1:],      # Exclude fundamental
+                    'dissonance_landscape.png'
+                )
             else:
-                # Use average if no exact match
-                initial_amps_matched.append(0.5)
-        
-        # Now we can plot with matched arrays
-        # For harmonicity map, we need ratios excluding fundamental
-        plot_harmonicity_map(
-            slices, 
-            optimized_active_ratios[1:],  # Exclude fundamental
-            initial_amps_matched[1:],      # Exclude fundamental
-            optimized_active_amps[1:],     # Exclude fundamental
-            'harmonicity_map.png'
-        )
-        
-        # 4. Dissonance landscape comparison
-        # For dense grid, only plot active partials to keep it readable
-        if len(optimized_active_ratios) <= 20:  # Only plot if not too many
-            plot_landscape_comparison(
-                optimized_active_ratios[1:],   # Exclude fundamental
-                initial_amps_matched[1:],       # Exclude fundamental
-                optimized_active_amps[1:],      # Exclude fundamental
-                'dissonance_landscape.png'
-            )
-        else:
-            print(f"  Skipping landscape plot (too many active partials: {len(optimized_active_ratios)})")
+                print(f"  Skipping landscape plot (too many active partials: {len(optimized_active_ratios)})")
     
     # 6. Rendering with Enhanced Timbre
     print("\nRendering Audio with Enhanced Timbre...")
