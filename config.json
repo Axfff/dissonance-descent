@@ -63,7 +63,7 @@
         "frequency_grid": {
             "enabled": true,
             "min_ratio": 1.0,
-            "max_ratio": 4.0,
+            "max_ratio": 3.0,
             "step": 0.5,
             "_comment": "Smaller test grid: [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0] = 9 frequencies"
         },
@@ -93,13 +93,13 @@
             "sparsity_penalty": 0.0,
             "_comment_sparsity": "Penalty for using many frequencies (encourages sparse solutions). 0.0 = no penalty"
         },
-        "checkpoint_interval": 10,
+        "checkpoint_interval": 2,
         "_comment_checkpoint": "Save detailed checkpoint every N iterations",
         "progress_dir": "experiments/optimization_progress",
         "_comment_progress": "Directory to save optimization progress",
         "multi_restart": {
-            "enabled": false,
-            "n_restarts": 3,
+            "enabled": true,
+            "n_restarts": 2,
             "_comment_n": "Number of optimization runs with different random seeds",
             "strategies": [
                 "perturb",
@@ -113,7 +113,7 @@
             "_comment_adsr": "ADSR perturbation amount (0.2 = ±20%)"
         },
         "gpu": {
-            "enabled": false,
+            "enabled": true,
             "_comment_enabled": "Enable GPU acceleration (requires PyTorch)",
             "device": "auto",
             "_comment_device": "'cuda' (NVIDIA), 'mps' (Mac), 'cpu', or 'auto' (auto-detect)"
